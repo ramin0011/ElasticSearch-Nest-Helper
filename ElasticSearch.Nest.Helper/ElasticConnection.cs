@@ -9,8 +9,7 @@ using Nest;
 
 namespace ElasticSearch.Nest.Helper
 {
-  
-    public class ElasticConnection :ElasticConnectionBase, IDisposable
+    public class ElasticConnection :ElasticConnectionBase, IDisposable, IElasticConnection
     {
 
         /// <summary>
