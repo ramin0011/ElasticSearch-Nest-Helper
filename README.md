@@ -1,0 +1,1 @@
+# ElasticSearch-Nest-Helper
