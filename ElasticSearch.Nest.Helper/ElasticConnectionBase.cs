@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
-using Elasticsearch.Net;
 using Nest;
 
-namespace ElasticSearch.Nest.Helper
+namespace ES.Helper
 {
     public class ElasticConnectionBase
     {

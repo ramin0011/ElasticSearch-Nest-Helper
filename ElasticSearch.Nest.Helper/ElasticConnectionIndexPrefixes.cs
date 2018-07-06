@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ElasticSearch.Nest.Helper
+﻿namespace ES.Helper
 {
     public class ElasticConnectionIndexPrefixes
     {

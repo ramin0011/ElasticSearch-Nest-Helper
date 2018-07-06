@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Nest;
 
-namespace ElasticSearch.Nest.Helper
+namespace ES.Helper
 {
     public interface IElasticConnection
     {
