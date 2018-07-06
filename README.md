@@ -1,6 +1,6 @@
 # ElasticSearch-Nest-Helper
 
-https://travis-ci.org/ramin0011/ElasticSearch-Nest-Helper.svg?branch=master
+<a href="https://travis-ci.org/ramin0011/ElasticSearch-Nest-Helper.svg?branch=master"><img src="https://travis-ci.org/ramin0011/ElasticSearch-Nest-Helper.svg?branch=master"></a>
 
 Elastic Search Helper Module to conect and query elastic search using ES Nest library 
 Features:
