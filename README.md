@@ -2,7 +2,10 @@
 
 <a href="https://travis-ci.org/ramin0011/ElasticSearch-Nest-Helper.svg?branch=master"><img src="https://travis-ci.org/ramin0011/ElasticSearch-Nest-Helper.svg?branch=master"></a>
 
-Elastic Search Helper Module to conect and query elastic search using ES Nest library 
+<a href="https://www.nuget.org/packages/ES.Helper/">install by nuget</a>
+
+Elastic Search Helper Module, helps you easily conect to elastic search and query data using ES Nest library
+
 Features:
 
 * create mappings
