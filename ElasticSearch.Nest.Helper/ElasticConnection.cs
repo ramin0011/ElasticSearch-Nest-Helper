@@ -31,6 +31,16 @@ namespace ES.Helper
             ElasticConnection.dbName = dbName;
         }
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="typeTables">define mappings ,a dictionary containing Type of a class and the class table name</param>
+        /// <param name="dbName">the environment , or the db name , this is just a name that will be used as a prefix ES default index</param>
+        public  void InitDb(Dictionary<Type, string> typeTables, string dbName)
+        {
+            Init(typeTables,dbName);
+            SetToTestMode();
+        }
+        /// <summary>
         /// </summary>
         /// <param name="defualtIndex">index name must be lower case</param>
         /// <returns></returns>
@@ -102,6 +112,14 @@ namespace ES.Helper
             indexPrefix = $"{dbName}-{ElasticConnectionIndexPrefixes.Production}";
         }
         public static void SetToTestMode()
+        {
+            indexPrefix = $"{dbName}-{ElasticConnectionIndexPrefixes.Test}";
+        }
+        public void SetToProductionEnv()
+        {
+            indexPrefix = $"{dbName}-{ElasticConnectionIndexPrefixes.Production}";
+        }
+        public  void SetToTestEnv()
         {
             indexPrefix = $"{dbName}-{ElasticConnectionIndexPrefixes.Test}";
         }
@@ -223,13 +241,13 @@ namespace ES.Helper
             );
         }
 
-        public async Task<IGetResponse<T>> Get<T>(T document, Id key) where T : class
+        public Task<IGetResponse<T>> GetAsync<T>(Id key) where T : class
         {
-            GetDb<T>();
-            return await _elasticClient.GetAsync<T>(document, id => new GetRequest(DefaultIndex, TypeName.Create(typeof(T)), key));
+            var doc = Activator.CreateInstance<T>();
+            return GetAsync(doc, key);
         }
 
-        public async Task<IGetResponse<T>> GetAsync<T>(T document, Id key) where T : class
+        private async Task<IGetResponse<T>> GetAsync<T>(T document, Id key) where T : class
         {
             GetDb<T>();
             return await _elasticClient.GetAsync<T>(document, id => new GetRequest(DefaultIndex, TypeName.Create(typeof(T)), key));
@@ -247,10 +265,10 @@ namespace ES.Helper
             return await _elasticClient.IndexManyAsync<T>(documents, IndexName.Rebuild(this.DefaultIndex, typeof(T)));
         }
 
-        public async Task DeleteAsync<T>(Id key) where T : class
+        public async Task<IDeleteResponse> DeleteAsync<T>(Id key) where T : class
         {
             GetDb<T>();
-            await _elasticClient.DeleteAsync<T>(DocumentPath<T>.Id(key));
+           return await _elasticClient.DeleteAsync<T>(DocumentPath<T>.Id(key));
         }
 
         public void Dispose()
