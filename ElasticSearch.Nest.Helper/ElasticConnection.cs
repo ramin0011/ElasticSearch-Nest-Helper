@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,6 +11,15 @@ namespace ES.Helper
     public class ElasticConnection :ElasticConnectionBase, IDisposable, IElasticConnection
     {
 
+        private string DefaultIndex;
+        private static string indexPrefix;
+        private ElasticClient _elasticClient;
+        private static string NodeUrl;
+        private static string UserName;
+        private static string Password;
+        private static string dbName;
+
+        public static Dictionary<Type, string> TypeTable = new Dictionary<Type, string>();
         /// <summary>
         /// 
         /// </summary>
@@ -31,11 +41,38 @@ namespace ES.Helper
             {
                 SetToTestMode();
             }
-            this.nodeUrl = nodeUrl;
-            this.userName = userName;
-            this.password = password;
+
+            NodeUrl = nodeUrl;
+            UserName = userName;
+            Password = password;
             if (string.IsNullOrEmpty(nodeUrl))
-                this.nodeUrl = "http://127.0.0.1:9200/";
+                NodeUrl = "http://127.0.0.1:9200/";
+        }
+
+        public static ElasticConnection GetLastConnection()
+        {
+            if (!string.IsNullOrEmpty(NodeUrl))
+            {
+                return new ElasticConnection(NodeUrl, UserName, Password);
+            }
+            return null;
+        }
+        public ElasticConnection GetLastDefaultEsConnection()
+        {
+            return ElasticConnection.GetLastConnection();
+        }
+        public static void SetElasticConnection(string nodeUrl, string userName = null, string password = null)
+        {
+            NodeUrl = nodeUrl;
+            UserName = userName;
+            Password = password;
+            if (string.IsNullOrEmpty(nodeUrl))
+                NodeUrl = "http://127.0.0.1:9200/";
+        }
+
+        public  void SetDefaultConnection(string nodeUrl, string userName = null, string password = null)
+        {
+            ElasticConnection.SetElasticConnection(nodeUrl,userName,password);
         }
 
         public string CreateQuery(string operatorWord, List<string> words)
@@ -60,8 +97,51 @@ namespace ES.Helper
 
 
 
-      
-
+        public static void SetToProductionMode()
+        {
+            indexPrefix = $"{dbName}-{ElasticConnectionIndexPrefixes.Production}";
+        }
+        public static void SetToTestMode()
+        {
+            indexPrefix = $"{dbName}-{ElasticConnectionIndexPrefixes.Test}";
+        }
+        private ElasticClient GetDb<T>()
+        {
+            this.DefaultIndex = TypeTable.Single(a => a.Key == typeof(T)).Value;
+            this.DefaultIndex = $"{indexPrefix}{DefaultIndex.ToLower()}";
+            var uriString = NodeUrl;
+            var node = new Uri(uriString);
+            var settings = new ConnectionSettings(node);
+            settings.DefaultIndex(DefaultIndex);
+            var userName = UserName;
+            if (!string.IsNullOrEmpty(userName))
+                settings.
+                    BasicAuthentication(userName, Password);
+#if DEBUG
+            settings.EnableDebugMode();
+#endif
+            var client = new ElasticClient(settings);
+            return _elasticClient = client;
+        }
+        private ElasticClient GetDb(string index)
+        {
+            if (TypeTable.Count == 0)
+                throw new Exception("Elastic Search Mapping Is Not Defined Call The Init Method First");
+            this.DefaultIndex = $"{index.ToLower()}";
+            var uriString = NodeUrl;
+            var node = new Uri(uriString);
+            var settings = new ConnectionSettings(node);
+            settings.DefaultIndex(DefaultIndex);
+            var userName = UserName;
+            if (!string.IsNullOrEmpty(userName))
+                settings.
+                    BasicAuthentication(userName, Password);
+#if DEBUG
+            settings.EnableDebugMode();
+#endif
+            var client = new ElasticClient(settings);
+            return _elasticClient = client;
+        }
 
         public async Task<ICreateIndexResponse> CreateMapping<T>(Func<TypeMappingDescriptor<T>, ITypeMapping> selector) where T : class
         {
@@ -78,6 +158,18 @@ namespace ES.Helper
         {
             GetDb<T>();
             var res = await _elasticClient.SearchAsync<T>(func);
+#if DEBUG
+            var rawQuery = Encoding.UTF8.GetString(res.ApiCall.RequestBodyInBytes);
+            var rawres = Encoding.UTF8.GetString(res.ApiCall.ResponseBodyInBytes);
+#endif
+            return res;
+        }
+
+
+        public async Task<ISearchResponse<T>> Scroll<T>(Time time, string scrolId) where T : class
+        {
+            GetDb<T>();
+            var res = await _elasticClient.ScrollAsync<T>(time, scrolId);
 #if DEBUG
             var rawQuery = Encoding.UTF8.GetString(res.ApiCall.RequestBodyInBytes);
             var rawres = Encoding.UTF8.GetString(res.ApiCall.ResponseBodyInBytes);
